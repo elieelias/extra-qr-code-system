@@ -1,0 +1,6 @@
+{
+  "name": "QR Code Dispenser",
+  "description": "App to preview, generate, and mark 5,000 unique one-time-use game token QR codes for sale.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
