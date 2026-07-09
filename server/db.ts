@@ -172,17 +172,17 @@ function seedLocalTokens(): TokenRecord[] {
     });
   }
 
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
-
-  fs.writeFileSync(LOCAL_DB_PATH, JSON.stringify(tokensList, null, 2), 'utf-8');
-  console.log(`Successfully seeded 5,000 local tokens into ${LOCAL_DB_PATH}`);
+  saveLocalTokens(tokensList);
+  console.log(`Successfully seeded 5,000 local tokens`);
   return tokensList;
 }
 
 // Ensure local database exists and has tokens
+let inMemoryTokens: TokenRecord[] | null = null;
+
 function getLocalTokens(): TokenRecord[] {
+  if (inMemoryTokens) return inMemoryTokens;
+  
   if (!fs.existsSync(LOCAL_DB_PATH)) {
     return seedLocalTokens();
   }
@@ -192,6 +192,7 @@ function getLocalTokens(): TokenRecord[] {
     if (parsed.length === 0) {
       return seedLocalTokens();
     }
+    inMemoryTokens = parsed;
     return parsed;
   } catch (error) {
     console.error('Error reading local tokens database, re-seeding:', error);
@@ -200,10 +201,15 @@ function getLocalTokens(): TokenRecord[] {
 }
 
 function saveLocalTokens(tokens: TokenRecord[]): void {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
+  inMemoryTokens = tokens;
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+    fs.writeFileSync(LOCAL_DB_PATH, JSON.stringify(tokens, null, 2), 'utf-8');
+  } catch (error) {
+    console.warn('Could not write to local filesystem (expected on serverless environments like Vercel). Using in-memory state.');
   }
-  fs.writeFileSync(LOCAL_DB_PATH, JSON.stringify(tokens, null, 2), 'utf-8');
 }
 
 // Database Actions Interface
