@@ -44,11 +44,11 @@ app.get('/api/token/random', async (req, res) => {
 // Mark token as occupied
 app.post('/api/token/mark-occupied', async (req, res) => {
   try {
-    const { id } = req.body;
+    const { id, name, phone_number } = req.body;
     if (!id) {
       return res.status(400).json({ error: 'id is required' });
     }
-    const success = await db.markOccupied(id);
+    const success = await db.markOccupied(id, name, phone_number);
     res.json({ success });
   } catch (error: any) {
     res.status(500).json({ error: error.message });

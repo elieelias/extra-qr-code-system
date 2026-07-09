@@ -320,14 +320,9 @@ export const db = {
 
         if (error) throw error;
         if (data && data.length > 0) {
-          const enriched = data.map(t => enrichTokenRecord(t as TokenRecord));
-          // Sort sequentially by manifest row number
-          enriched.sort((a, b) => {
-            const numA = getRowNumberForToken(a.token);
-            const numB = getRowNumberForToken(b.token);
-            return numA - numB;
-          });
-          return enriched[0];
+          const randomIndex = Math.floor(Math.random() * data.length);
+          const selected = data[randomIndex];
+          return enrichTokenRecord(selected as TokenRecord);
         }
         return null;
       } catch (e: any) {
@@ -340,21 +335,21 @@ export const db = {
     const available = tokens.filter(t => !t.is_used && !t.occupied);
     if (available.length === 0) return null;
 
-    const enriched = available.map(t => enrichTokenRecord(t));
-    enriched.sort((a, b) => {
-      const numA = getRowNumberForToken(a.token);
-      const numB = getRowNumberForToken(b.token);
-      return numA - numB;
-    });
-    return enriched[0];
+    const randomIndex = Math.floor(Math.random() * available.length);
+    const selected = available[randomIndex];
+    return enrichTokenRecord(selected);
   },
 
-  async markOccupied(id: string): Promise<boolean> {
+  async markOccupied(id: string, name?: string, phone_number?: string): Promise<boolean> {
     if (isSupabaseConfigured && supabase) {
       try {
+        const updatePayload: any = { occupied: true };
+        if (name) updatePayload.name = name;
+        if (phone_number) updatePayload.phone_number = phone_number;
+
         const { data, error } = await supabase
           .from('tokens')
-          .update({ occupied: true })
+          .update(updatePayload)
           .eq('id', id)
           .select();
 
@@ -370,6 +365,8 @@ export const db = {
     const index = tokens.findIndex(t => t.id === id);
     if (index !== -1) {
       tokens[index].occupied = true;
+      if (name) tokens[index].name = name;
+      if (phone_number) tokens[index].phone_number = phone_number;
       saveLocalTokens(tokens);
       return true;
     }
